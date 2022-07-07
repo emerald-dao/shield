@@ -1,0 +1,40 @@
+{
+  "contracts": {
+    "FLOAT": {
+      "source": "https://flow-view-source.com/mainnet/account/0x2d4c3caffbeab845/contract/FLOAT",
+      "aliases": {
+        "testnet": "0x0afe396ebc8eee65",
+        "mainnet": "0x2d4c3caffbeab845"
+      }
+    },
+    "FIND": {
+      "source": "https://flow-view-source.com/mainnet/account/0x097bafa4e0b48eef/contract/FIND",
+      "aliases": {
+        "testnet": "0xa16ab1d0abde3625",
+        "mainnet": "0x097bafa4e0b48eef"
+      }
+    },
+    "Flovatar": {
+      "source": "https://flow-view-source.com/mainnet/account/0x921ea449dffec68a/contract/Flovatar",
+      "aliases": {
+        "testnet": "0x0cf264811b95d465",
+        "mainnet": "0x921ea449dffec68a"
+      }
+    },
+    "Versus": {
+      "source": "https://flow-view-source.com/mainnet/account/0xd796ff17107bbff6/contract/Versus",
+      "aliases": {
+        "testnet": "0x99ca04281098b33d",
+        "mainnet": "0xd796ff17107bbff6"
+      }
+    }
+  },
+  "projects": [
+    "FLOAT",
+    "GoatedGoats",
+    "Flovatar",
+    "Geniace",
+    "Versus",
+    ".find"
+  ]
+}
