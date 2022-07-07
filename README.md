@@ -2,7 +2,7 @@
 
 Welcome to Shield, a community-driven auditing service for Cadence smart contracts and transactions.
 
-<img src="https://i.imgur.com/rxKTkRe.png" alt="shield logo" />
+<img src="https://i.imgur.com/rxKTkRe.png" alt="shield logo" width="500" />
 
 ## Motiviation
 
