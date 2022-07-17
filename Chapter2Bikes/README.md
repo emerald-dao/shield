@@ -1,6 +1,13 @@
 # Contract Review on Chapter2Bikes
 
-This contract review is brought to you by Bam from Emerald City. 
+This contract review is brought to you by Bam. 
+
+Disclaimer : 
+This is only a review to some random contracts. 
+All advice / suggestions are my own opinions and take no response for any damage / loses. 
+And I am not publishing this on behalf of any party but myself. 
+
+
 We will go through this contract as an educational resources. 
 
 This contract is not yet deployed to mainnet and it should acts as one of the typical NFT contracts on flow. 
@@ -173,7 +180,7 @@ NFT resource
 
     pub let edition: Chapter2Bikes.Edition     // <- this should use the Edition declared
 
-    pub var metadata: {String: String}
+    pub var metadata: {String: String}         // <- ensure the ipfs hash is stored in the metadata, so that others can get that from views
 
     init(_edition: Chapter2Bikes.Edition, _metadata: {String: String}) {
       self.id = Chapter2Bikes.totalSupply
@@ -243,12 +250,14 @@ NFT resource
                 })
             )
           case Type<MetadataViews.NFTCollectionDisplay>():
+            let ipfsHash = self.metadata["ipfsHash"]! 
+            let url = "https://ethos.mypinata.cloud/ipfs/".concat(ipfsHash).concat("/").concat(self.id.toString())   // construct the url on chain. 
             let frameMedia = MetadataViews.Media(
-              file: MetadataViews.HTTPFile(url: "https://ethos.mypinata.cloud/ipfs/{ipfs hash}/{collection id}-50-00.png"),
+              file: MetadataViews.HTTPFile(url: url.concat("-50-00.png")),
               mediaType: "video/mp4"
             )
             let paintingMedia = MetadataViews.Media(
-              file: MetadataViews.HTTPFile(url: "https://ethos.mypinata.cloud/ipfs/{ipfs hash}/{collection id}-20-00.png"),
+              file: MetadataViews.HTTPFile(url: url.concat("-20-00.png")),
               mediaType: "image/png"
             )
             return MetadataViews.NFTCollectionDisplay(
@@ -265,5 +274,113 @@ NFT resource
       return nil 
     }
 
+  }
+  ```
+
+
+## Admin Resource 
+
+Storing the create Admin function inside of the Admin resource is an anti-pattern discouraged by Flow. 
+https://docs.onflow.org/cadence/anti-patterns/#public-admin-resource-creation-functions-are-unsafe
+
+### Original Contract 
+
+```cadence
+  // Admin Resource
+  pub resource Admin {
+    // mint Chapter2 NFT
+    pub fun mint(recipient: &{NonFungibleToken.CollectionPublic}, edition: UInt8, metadata: {String: String}) {
+        var newNFT <- create NFT(_edition: edition, _metadata: metadata)
+
+        recipient.deposit(token: <- newNFT)
+    }
+
+    // batch mint Chapter2 NFT
+    /* Remeber that edition should be in type Chapter2Bikes.Edition */ 
+    pub fun batchMint(recipient: &{NonFungibleToken.CollectionPublic}, edition: UInt8, metadataArray: [{String: String}]) {
+        var i: Int = 0
+        while i < metadataArray.length {
+            self.mint(recipient: recipient, edition: edition, metadata: metadataArray[i])
+            i = i + 1;
+        }
+    }
+
+    pub fun createNewAdmin(): @Admin {
+        return <- create Admin()
+    }
+  }
+  ```
+
+
+A better way is to store only 1 admin resource and adopt capability access instead 
+
+### Suggested Contract 
+
+```cadence 
+  // There is only 1 Admin ever existed and stored in the contract account's storage
+  pub resource Admin {
+    // mint Chapter2 NFT
+    pub fun mint(recipient: &{NonFungibleToken.CollectionPublic}, edition: UInt8, metadata: {String: String}) {
+        var newNFT <- create NFT(_edition: edition, _metadata: metadata)
+
+        recipient.deposit(token: <- newNFT)
+    }
+
+    // batch mint Chapter2 NFT
+    pub fun batchMint(recipient: &{NonFungibleToken.CollectionPublic}, edition: UInt8, metadataArray: [{String: String}]) {
+        var i: Int = 0
+        while i < metadataArray.length {
+            self.mint(recipient: recipient, edition: edition, metadata: metadataArray[i])
+            i = i + 1;
+        }
+    }
+
+    pub fun createNewAdmin(): @Admin {
+        return <- create Admin()
+    }
+  }
+
+  // Others can access the function thru Proxies. 
+  pub resource interface AdminProxyPublic {
+    pub fun giveAdmin(cap: Capability<&Admin>) 
+  }
+
+  pub resource AdminProxy : AdminProxyPublic {
+
+    access(self) var cap : Capability<&Admin> 
+
+    init() {
+      self.cap = nil
+    }
+
+    pub fun giveAdmin(cap: Capability<&Admin>) {
+      pre{
+        self.cap == nil : "Capability is already set."
+      }
+      self.cap = cap
+    }
+
+    pub fun checkAdmin() : Bool {
+      return self.cap.check()
+    }
+
+    access(self) fun borrow() : &Admin {
+      pre{
+        self.cap != nil : "Capability is not set." 
+        self.checkAdmin() : "Admin unlinked capability"
+      }
+      return self.cap.borrow()!
+    }
+
+    pub fun mint(recipient: &{NonFungibleToken.CollectionPublic}, edition: Chapter2Bikes.Edition, metadata: {String: String}) {
+      let admin = self.borrow()
+      admin.mint(recipient: recipient, edition: edition, metadata: metadata)
+    }
+
+    pub fun batchMint(recipient: &{NonFungibleToken.CollectionPublic}, edition: Chapter2Bikes.Edition, metadataArray: [{String: String}]) {
+      let admin = self.borrow()
+      admin.batchMint(recipient: recipient, edition: edition, metadataArray:metadataArray)
+
+    }
   }
   ```
