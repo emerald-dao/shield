@@ -27,6 +27,12 @@
         "testnet": "0x99ca04281098b33d",
         "mainnet": "0xd796ff17107bbff6"
       }
+    },
+    "Flunks": {
+      "source": "https://flow-view-source.com/mainnet/account/0x807c3d470888cc48/contract/Flunks",
+      "aliases": {
+        "mainnet": "0x807c3d470888cc48"
+      }
     }
   },
   "projects": [
@@ -34,6 +40,7 @@
     "Flovatar",
     "Geniace",
     "Versus",
-    ".find"
+    ".find",
+    "Flunks"
   ]
 }
